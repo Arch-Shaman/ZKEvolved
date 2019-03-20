@@ -39,6 +39,7 @@ local spCreateFeature = Spring.CreateFeature
 local vectorPolarToCart = Spring.Utilities.Vector.PolarToCart
 local spSetFeatureDirection = Spring.SetFeatureDirection
 local spDestroyUnit = Spring.DestroyUnit
+local spCreateUnit = Spring.CreateUnit
 
 
 function gadget:Initialize()
@@ -121,16 +122,17 @@ end
 
 
 function gadget:GameFrame(f)
-	for i,c in pairs(createList) do
-		if c.feature then
-			local featureID = spCreateFeature(c.name , c.x, c.y, c.z, 0, c.team)
+	for i = 1, #createList do -- converted into i from pairs
+		local config = createList[i]
+		if config.feature then
+			local featureID = spCreateFeature(config.name , config.x, config.y, config.z, 0, config.team)
 			local dir = vectorPolarToCart(1, 2*pi*random())
 			spSetFeatureDirection(featureID, dir[1], 0 , dir[2])
 		else
-			local unitID = Spring.CreateUnit(c.name , c.x, c.y, c.z, 0, c.team)
+			local unitID = spCreateUnit(config.name , config.x, config.y, config.z, 0, config.team)
 			-- Spring.SetUnitRulesParam(unitID, "parent_unit_id", c.owner)
-			if (c.expire > 0) and unitID then 
-				expireList[unitID] = f + c.expire * 32
+			if (config.expire > 0) and unitID then 
+				expireList[unitID] = f + config.expire * 32
 			end
 		end
 		createList[i]=nil
@@ -138,7 +140,7 @@ function gadget:GameFrame(f)
 	if ((f+6)%64<0.1) then 
 		for i, e in pairs(expireList) do
 			if (f > e) then
-					spDestroyUnit(i, true)
+				spDestroyUnit(i, true)
 			end
 		end
 	end
