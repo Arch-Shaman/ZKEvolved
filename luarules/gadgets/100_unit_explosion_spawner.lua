@@ -23,10 +23,26 @@ local shieldCollide_id = {}
 local createList = {}
 local expireList = {}
 local noCreate = {}
-local UseUnitResource = Spring.UseUnitResource
+
+-- Speedups --
+local SetWatchProjectile = Script.SetWatchProjectile
+local SetWatchWeapon = Script.SetWatchWeapon
+local spGetModOptions = Spring.GetModOptions
+local spGetProjectileDefID = Spring.GetProjectileDefID
+local spGetProjectileTeamID = Spring.GetProjectileTeamID
+local spGetProjectilePosition = Spring.GetProjectilePosition
+local spUseTeamResource = Spring.UseTeamResource
+local spGetUnitShieldState = Spring.GetUnitShieldState
+local pi = math.pi()
+local random = math.random
+local spCreateFeature = Spring.CreateFeature
+local vectorPolarToCart = Spring.Utilities.Vector.PolarToCart
+local spSetFeatureDirection = Spring.SetFeatureDirection
+local spDestroyUnit = Spring.DestroyUnit
+
 
 function gadget:Initialize()
-	local modOptions = Spring.GetModOptions()
+	local modOptions = spGetModOptions()
 	local spawn_defs_name, shieldCollide_names = VFS.Include("LuaRules/Configs/explosion_spawn_defs.lua")
 	for weapon,spawn_def in pairs(spawn_defs_name) do
 		if WeaponDefNames[weapon] then
@@ -34,10 +50,10 @@ function gadget:Initialize()
 			if (UnitDefNames[spawn_def.name] and not spawn_def.feature) or (FeatureDefNames[spawn_def.name] and spawn_def.feature) then
 				spawn_defs_id[weaponID] = spawn_def
 				wantedList[#wantedList + 1] = weaponID
-				if Script.SetWatchProjectile then
-					Script.SetWatchProjectile(weaponID, true)
+				if SetWatchProjectile then
+					SetWatchProjectile(weaponID, true)
 				else
-					Script.SetWatchWeapon(weaponID, true)
+					SetWatchWeapon(weaponID, true)
 				end
 			end
 		end
@@ -55,14 +71,14 @@ function gadget:Explosion_GetWantedWeaponDef()
 end
 
 function gadget:ProjectileDestroyed(proID)
-	local weapDefID=Spring.GetProjectileDefID(proID)
-	local teamID=Spring.GetProjectileTeamID(proID)
+	local weapDefID=spGetProjectileDefID(proID)
+	local teamID=spGetProjectileTeamID(proID)
 	if spawn_defs_id[weapDefID] then
 		if not noCreate[proID] then
-			local x,y,z=Spring.GetProjectilePosition(proID)
-			local spawnDef=spawn_defs_id[weapDefID]
+			local x,y,z = spGetProjectilePosition(proID)
+			local spawnDef = spawn_defs_id[weapDefID]
 			if (spawnDef.feature and Spring.Utilities.IsValidPosition(x, z)) or 
-					Spring.UseTeamResource(teamID, "m", spawnDef.cost) then -- Should it be UseUnitResource? But what gonna happen if projection owner is dead?
+					spUseTeamResource(teamID, "m", spawnDef.cost) then -- Should it be UseUnitResource? But what gonna happen if projection owner is dead?
 				createList[#createList+1] = {
 					name = spawnDef.name,
 					team = teamID, 
@@ -86,7 +102,7 @@ function gadget:ShieldPreDamaged(proID, proOwnerID, shieldEmitterWeaponNum, shie
 	if shieldCarrierUnitID and Spring.ValidUnitID(shieldCarrierUnitID) then
 		local proDefID = Spring.GetProjectileDefID(proID)
 		if proDefID and shieldCollide_id[proDefID] then
-			local shieldOn,shieldCharge = Spring.GetUnitShieldState(shieldCarrierUnitID)
+			local shieldOn,shieldCharge = spGetUnitShieldState(shieldCarrierUnitID)
 			local damage = shieldCollide_id[proDefID].damage
 			if shieldCharge < damage then
 				return true
@@ -107,9 +123,9 @@ end
 function gadget:GameFrame(f)
 	for i,c in pairs(createList) do
 		if c.feature then
-			local featureID = Spring.CreateFeature(c.name , c.x, c.y, c.z, 0, c.team)
-			local dir = Spring.Utilities.Vector.PolarToCart(1, 2*math.pi*math.random())
-			Spring.SetFeatureDirection(featureID, dir[1], 0 , dir[2])
+			local featureID = spCreateFeature(c.name , c.x, c.y, c.z, 0, c.team)
+			local dir = vectorPolarToCart(1, 2*pi*random())
+			spSetFeatureDirection(featureID, dir[1], 0 , dir[2])
 		else
 			local unitID = Spring.CreateUnit(c.name , c.x, c.y, c.z, 0, c.team)
 			-- Spring.SetUnitRulesParam(unitID, "parent_unit_id", c.owner)
@@ -122,7 +138,7 @@ function gadget:GameFrame(f)
 	if ((f+6)%64<0.1) then 
 		for i, e in pairs(expireList) do
 			if (f > e) then
-					Spring.DestroyUnit(i, true)
+					spDestroyUnit(i, true)
 			end
 		end
 	end
