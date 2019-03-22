@@ -85,7 +85,6 @@ unitDef = {
 		collideFriendly         = false,
 		craterBoost             = 0,
 		craterMult              = 0,
-    edgeEffectiveness       = 0.25,
 		--model                   = [[wep_b_fabby.s3o]],
 		damage                  = {
 			default = 25,
@@ -133,22 +132,21 @@ unitDef = {
 			numprojectiles = 4, -- how many of the weapondef we spawn. OPTIONAL. Default: 1.
 			projectile = "casphoenix_napalm_secondary",
 			spreadradius = 90, -- used in clusters. OPTIONAL. Default: 100.
-			clustertype = "vrandomxz", -- accepted values: randomx, randomy, randomz, randomxy, randomxz, randomyz, random. OPTIONAL. default: random.
+			clustervec = "randomxz", -- accepted values: randomx, randomy, randomz, randomxy, randomxz, randomyz, random. OPTIONAL. default: random.
 			use2ddist = 1, -- should we check 2d or 3d distance? OPTIONAL. Default: 0.
 			spawndist = 170, -- at what distance should we spawn the projectile(s)? REQUIRED.
 			timeoutspawn = 0, -- Can this missile spawn its subprojectiles when it times out? OPTIONAL. Default: 1.
-			vradius = 8, -- velocity that is randomly added. covers range of +-vradius. OPTIONAL. Default: 4.2
+			vradius = 4, -- velocity that is randomly added. covers range of +-vradius. OPTIONAL. Default: 4.2
 			groundimpact = 1, -- check the distance between ground and projectile? OPTIONAL.
 			proxy = 0, -- check for nearby units?
 			proxydist = 0, -- how far to check for units? Default: spawndist
 			reaim_time = 60, -- Fast update not required (maybe dangerous)
 			--setunitsonfire = "1", -- the bomb itself is a physical attack.
 			--burntime = 300, -- so we commented these lines out. Basically the new cas phoenix drops a couple main bombs that split into the napalm components.
-      shield_damage = 150, -- potentially passes the bomb's total damage through?
 		},
 	  
 		damage                  = {
-			default = 50,
+			default = 150,
 		},
 
 		edgeEffectiveness       = 0.7,

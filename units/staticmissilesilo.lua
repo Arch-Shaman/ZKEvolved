@@ -14,7 +14,7 @@ unitDef = {
     [[seismic]],
     [[empmissile]],
     [[napalmmissile]],
-	[[orca]],
+	[[icbm]],
   },
 
   buildPic                      = [[staticmissilesilo.png]],

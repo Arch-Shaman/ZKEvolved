@@ -85,7 +85,7 @@ unitDef = {
 		numprojectiles = 3, -- how many of the weapondef we spawn. OPTIONAL. Default: 1.
 		projectile = "turretaaflak_tritary", -- the weapondef name. we will convert this to an ID in init. REQUIRED. If defined in the unitdef, it will be unitdefname_weapondefname.
 		spreadradius = 3, -- used in clusters. OPTIONAL. Default: 100.
-		clustertype = "vrandom", -- accepted values: randomx, randomy, randomz, randomxy, randomxz, randomyz, random. OPTIONAL. default: random.
+		clustervec = "randomxyz", -- accepted values: randomx, randomy, randomz, randomxy, randomxz, randomyz, random. OPTIONAL. default: random.
 		use2ddist = 0, -- should we check 2d or 3d distance? OPTIONAL. Default: 0.
 		spawndist = 400, -- at what distance should we spawn the projectile(s)? REQUIRED.
 		vradius = 8, -- velocity that is randomly added. covers range of +-vradius. OPTIONAL. Default: 4.2
@@ -118,35 +118,6 @@ unitDef = {
       weaponVelocity          = 1400,
       --coverage = 2200,
     },
-
-SECONDARY = {
-		weaponType              = [[Cannon]],
-		name = [[Flak Cannister Submunition]],
-		areaOfEffect = 28,
-		damage = {
-			default = 1.5,
-			planes = 15,
-			subs = 0,
-		},
-		explosionGenerator = [[custom:EXP_MEDIUM_BUILDING_SMALL]],
-		customParams = {
-			isaa = [[1]],
-			light_radius = 0,
-			numprojectiles = 8, -- how many of the weapondef we spawn. OPTIONAL. Default: 1.
-			projectile = "casflak_tritary", -- the weapondef name. we will convert this to an ID in init. REQUIRED. If defined in the unitdef, it will be 
-			spreadradius = 3, -- used in clusters. OPTIONAL. Default: 100.
-			clustertype = "vrandom", -- accepted values: randomx, randomy, randomz, randomxy, randomxz, randomyz, random. OPTIONAL. default: random.
-			use2ddist = 0, -- should we check 2d or 3d distance? OPTIONAL. Default: 0.
-			spawndist = 50, -- at what distance should we spawn the projectile(s)? REQUIRED.
-			vradius = 15, -- velocity that is randomly added. covers range of +-vradius. OPTIONAL. Default: 4.2
-			groundimpact = 0, -- check the distance between ground and projectile? OPTIONAL.
-			proxy = 1, -- check for nearby units?
-			proxydist = 130, -- how far to check for units? Default: spawndist
-		},
-		size = 5,
-		rgbColor                = [[1 0.95 0.4]],
-		mygravity = 0.5,
-	},
 	
 	TRITARY = {
 	  name                    = [[Flechette]],
