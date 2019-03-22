@@ -36,6 +36,9 @@ local spGetConfigInt = Spring.GetConfigInt
 local spSendCommands = Spring.SendCommands
 local spLog = Spring.Log
 local vfsInclude = VFS.Include
+local vfsLoadFile = VFS.LoadFile
+local vfsFileExists = VFS.FileExists
+local vfsDirList = VFS.DirList
 local spGetPlayerInfo = Spring.GetPlayerInfo
 local spGetMyPlayerID = Spring.GetMyPlayerID
 local spEcho = Spring.Echo
@@ -98,7 +101,7 @@ local SELECTOR_BASENAME = 'selector.lua'
 do
 	local isMission = Game.modDesc:find("Mission Mutator")
 	if isMission then -- all missions will be forced to use a specific name
-		if not VFS.FileExists(ORDER_FILENAME) or not VFS.FileExists(CONFIG_FILENAME) then
+		if not vfsFileExists(ORDER_FILENAME) or not vfsFileExists(CONFIG_FILENAME) then
 			ORDER_FILENAME     = LUAUI_DIRNAME .. 'Config/ZK_order.lua' --use "ZK" name when running any mission mod (provided that there's no existing config file)
 			CONFIG_FILENAME    = LUAUI_DIRNAME .. 'Config/ZK_data.lua'
 		end
@@ -126,7 +129,7 @@ end
 local localWidgetsFirst = false
 local localWidgets = false
 
-if VFS.FileExists(CONFIG_FILENAME) then --check config file whether user want to use localWidgetsFirst
+if vfsFileExists(CONFIG_FILENAME) then --check config file whether user want to use localWidgetsFirst
   local cadata = vfsInclude(CONFIG_FILENAME)
   if cadata and cadata["Local Widgets Config"] then
     localWidgetsFirst = cadata["Local Widgets Config"].localWidgetsFirst
@@ -451,7 +454,8 @@ function widgetHandler:Initialize()
   end
 
   -- Add ignorelist --
-  local customkeys = select(10, spGetPlayerInfo(spGetMyPlayerID()))
+  local customkeys = select(10, Spring.GetPlayerInfo(Spring.GetMyPlayerID()))
+  spEcho(tostring(customkeys))
   if customkeys["ignored"] then
     if strfind(customkeys["ignored"],",") then
       local newignorelist = strgsub(customkeys["ignored"],","," ")
@@ -479,7 +483,7 @@ function widgetHandler:Initialize()
   local unsortedWidgets = {}
 
   -- stuff the widgets into unsortedWidgets
-  local widgetFiles = VFS.DirList(WIDGET_DIRNAME, "*.lua", VFSMODE)
+  local widgetFiles = vfsDirList(WIDGET_DIRNAME, "*.lua", VFSMODE)
   for k,wf in ipairs(widgetFiles) do
     local widget = self:LoadWidget(wf)
     if (widget) then
@@ -536,7 +540,7 @@ end
 function widgetHandler:LoadWidget(filename, _VFSMODE)
   _VFSMODE = _VFSMODE or VFSMODE
   local basename = Basename(filename)
-  local text = VFS.LoadFile(filename, _VFSMODE)
+  local text = vfsLoadFile(filename, _VFSMODE)
 
   if (text == nil) then
     spLog(HANDLER_BASENAME, LOG.ERROR, 'Failed to load: ' .. basename .. '  (missing file: ' .. filename ..')')
@@ -593,9 +597,9 @@ function widgetHandler:LoadWidget(filename, _VFSMODE)
     knownInfo.fromZip  = true
     if (_VFSMODE ~= VFS.ZIP) then
       if (_VFSMODE == VFS.RAW_FIRST) then
-        knownInfo.fromZip = not VFS.FileExists(filename,VFS.RAW_ONLY)
+        knownInfo.fromZip = not vfsFileExists(filename,VFS.RAW_ONLY)
       else
-        knownInfo.fromZip = VFS.FileExists(filename,VFS.ZIP_ONLY)
+        knownInfo.fromZip = vfsFileExists(filename,VFS.ZIP_ONLY)
       end
     end
     self.knownWidgets[name] = knownInfo
