@@ -15,6 +15,17 @@ function widget:GetInfo()
 end
 
 local echoOutCalculationTime = false
+
+-- Speedups --
+local clock = os.clock
+local modf = math.modf
+local abs = math.abs
+local max = math.max
+local sqrt = math.sqrt
+local spEcho = Spring.Echo
+local tsort = table.sort
+
+
 ---------------------------------------------------------------------------------
 -----------C L U S T E R   D E T E C T I O N   T O O L --------------------------
 ---------------------------------------------------------------------------------
@@ -23,11 +34,11 @@ local echoOutCalculationTime = false
 -- 3 function.
 local searchCount = 0
 local function BinarySearchNaturalOrder(position, orderedList)
-	local prevCount = os.clock()
+	local prevCount = clock()
 	local startPos = 1
 	local endPos = #orderedList
 	local span = endPos - startPos
-	local midPos = math.modf((span/2) + startPos + 0.5) --round to nearest integer
+	local midPos = modf((span/2) + startPos + 0.5) --round to nearest integer
 	local found = false
 	while (span > 1) do
 		local difference = position - orderedList[midPos][2] 
@@ -42,26 +53,26 @@ local function BinarySearchNaturalOrder(position, orderedList)
 		end
 		
 		span = endPos - startPos
-		midPos = math.modf((span/2) + startPos + 0.5) --round to nearest integer
+		midPos = modf((span/2) + startPos + 0.5) --round to nearest integer
 	end
 	if not found then
-		if(math.abs(position - orderedList[startPos][2]) < math.abs(position - orderedList[endPos][2])) then
+		if(abs(position - orderedList[startPos][2]) < abs(position - orderedList[endPos][2])) then
 			midPos = startPos
 		else
 			midPos = endPos
 		end
 	end
-	searchCount = searchCount + (os.clock() - prevCount)
+	searchCount = searchCount + (clock() - prevCount)
 	return midPos
 end
 
 local distCount = 0
 local function GetDistanceSQ(unitID1, unitID2,receivedUnitList)
-	local prevClock = os.clock()
+	local prevClock = clock()
 	local x1,x2 = receivedUnitList[unitID1][1],receivedUnitList[unitID2][1]
 	local z1,z2 = receivedUnitList[unitID1][3],receivedUnitList[unitID2][3]
 	local distanceSQ = ((x1-x2)^2 + (z1-z2)^2)
-	distCount = distCount + (os.clock() - prevClock)
+	distCount = distCount + (clock() - prevClock)
 	return distanceSQ
 end
 
@@ -84,14 +95,14 @@ local function GetUnitsInSquare(x,z,distance,posListX)
 	if #unitsX == 0 then
 		return unitsX
 	end
-	local prevClock = os.clock()
+	local prevClock = clock()
 	local unitsInBox = {}
 	for i=1, #unitsX, 1 do
-		if (math.abs(unitsX[i][3]-z) <= distance) then
+		if (abs(unitsX[i][3]-z) <= distance) then
 			unitsInBox[#unitsInBox+1] = unitsX[i][1]
 		end
 	end
-	intersectionCount = intersectionCount + (os.clock()-prevClock)
+	intersectionCount = intersectionCount + (clock()-prevClock)
 	return unitsInBox
 end
 
@@ -99,10 +110,10 @@ end
 -- 1 function.
 local getunitCount = 0
 local function GetNeighbor (unitID, myTeamID, neighborhoodRadius, receivedUnitList,posListX) --//return the unitIDs of specific units around a center unit
-	local prevCount = os.clock()
+	local prevCount = clock()
 	local x,z = receivedUnitList[unitID][1],receivedUnitList[unitID][3]
 	local tempList = GetUnitsInSquare(x,z,neighborhoodRadius,posListX) --Get neighbor. Ouput: unitID + my units
-	getunitCount = getunitCount + (os.clock() - prevCount)
+	getunitCount = getunitCount + (clock() - prevCount)
 	return tempList
 end
 
@@ -130,7 +141,7 @@ end
 
 local insertCount = 0
 local function InsertOrderSeed (orderSeed, unitID_to_orderSeedMeta, unitID, objects) --//stack tiny values at end of table, and big values at start of table.
-	local prevClock = os.clock()
+	local prevClock = clock()
 	local orderSeedLenght = #orderSeed or 0 --//code below can handle both: table of lenght 0 and >1
 	local insertionIndex = orderSeedLenght + 1 --//insert data just above that big value
 	for i = orderSeedLenght, 1, -1 do
@@ -150,13 +161,13 @@ local function InsertOrderSeed (orderSeed, unitID_to_orderSeedMeta, unitID, obje
 		unitID_to_orderSeedMeta[buffer1.unitID]=j+1 -- update meta table
 		buffer1 = buffer2 --use saved content as next backup, then repeat process
 	end
-	insertCount = insertCount + (os.clock() - prevClock)
+	insertCount = insertCount + (clock() - prevClock)
 	return orderSeed, unitID_to_orderSeedMeta
 end
 
 local shiftCount = 0
 local function ShiftOrderSeed (orderSeed, unitID_to_orderSeedMeta, unitID, objects) --//move values to end of table, and shift big values to beginning of of table.
-	local prevClock = os.clock()
+	local prevClock = clock()
 	local oldPosition = unitID_to_orderSeedMeta[unitID]
 	local newPosition = oldPosition
 	for i = oldPosition+1, #orderSeed, 1 do
@@ -179,7 +190,7 @@ local function ShiftOrderSeed (orderSeed, unitID_to_orderSeedMeta, unitID, objec
 			buffer1 = buffer2 --//use saved content as the following backup, then repeat process
 		end
 	end
-	shiftCount = shiftCount + (os.clock() - prevClock)
+	shiftCount = shiftCount + (clock() - prevClock)
 	return orderSeed, unitID_to_orderSeedMeta
 end
 
@@ -217,7 +228,7 @@ local function merge_sort(m,CompareFunction)
 	end
     --// else list size is > 1, so split the list into two sublists
     local left, right = {}, {} --var list left, right
-    local middle = math.modf((#m/2)+0.5) --var integer middle = length(m) / 2
+    local middle = modf((#m/2)+0.5) --var integer middle = length(m) / 2
     for i= 1, middle, 1 do --for each x in m up to middle
          left[#left+1] = m[i] --add x to left
 	end
@@ -238,13 +249,13 @@ end
 local useMergeSorter_gbl = true --//constant: experiment with merge sorter (slower)
 local orderseedCount = 0
 local function OrderSeedsUpdate(neighborsID, currentUnitID,objects, orderSeed,unitID_to_orderSeedMeta,receivedUnitList)
-	local prevCount = os.clock()
+	local prevCount = clock()
 	local c_dist = objects[currentUnitID].core_distance
 	for i=1, #neighborsID do
 		local neighborUnitID = neighborsID[i]
 		objects[neighborUnitID]=objects[neighborUnitID] or {unitID=neighborUnitID,}
 		if (objects[neighborUnitID].processed~=true) then
-			local new_r_dist = math.max(c_dist, GetDistanceSQ(currentUnitID, neighborUnitID,receivedUnitList))
+			local new_r_dist = max(c_dist, GetDistanceSQ(currentUnitID, neighborUnitID,receivedUnitList))
 			if objects[neighborUnitID].reachability_distance==nil then
 				objects[neighborUnitID].reachability_distance = new_r_dist
 				if useMergeSorter_gbl then
@@ -268,12 +279,12 @@ local function OrderSeedsUpdate(neighborsID, currentUnitID,objects, orderSeed,un
 	end
 	if useMergeSorter_gbl then
 		-- orderSeed = merge_sort(orderSeed, function(a,b) return a.content.reachability_distance > b.content.reachability_distance end ) --really slow
-		table.sort(orderSeed, function(a,b) return a.content.reachability_distance > b.content.reachability_distance end) --abit slow
+		tsort(orderSeed, function(a,b) return a.content.reachability_distance > b.content.reachability_distance end) --abit slow
 		for i= 1, #orderSeed do
 			unitID_to_orderSeedMeta[orderSeed[i].unitID] = i
 		end
 	end
-	orderseedCount = orderseedCount + (os.clock() - prevCount)
+	orderseedCount = orderseedCount + (clock() - prevCount)
 	return orderSeed, objects, unitID_to_orderSeedMeta
 end
 
@@ -286,10 +297,10 @@ local function SetCoreDistance(neighborsID, minimumNeighbor, unitID,receivedUnit
 			local distanceSQ = GetDistanceSQ(unitID,neighborsID[i],receivedUnitList)
 			neighborsDist[i]= distanceSQ --//add distance value
 		end
-		local prevCount = os.clock()
-		table.sort(neighborsDist, function(a,b) return a < b end)
+		local prevCount = clock()
+		tsort(neighborsDist, function(a,b) return a < b end)
 		-- neighborsDist = merge_sort(neighborsDist, true)
-		setcoreCount = setcoreCount + (os.clock()-prevCount)
+		setcoreCount = setcoreCount + (clock()-prevCount)
 		return neighborsDist[minimumNeighbor] --//return the distance of the minimumNeigbor'th unit with respect to the center unit.
 	else
 		return nil
@@ -297,10 +308,10 @@ local function SetCoreDistance(neighborsID, minimumNeighbor, unitID,receivedUnit
 end
 
 local function ExtractDBSCAN_Clustering (unitID, currentClusterID, cluster, noiseIDList, object, neighborhoodRadius_alt)
-	local reachabilityDist = (object.reachability_distance and math.sqrt(object.reachability_distance)) or 9999
+	local reachabilityDist = (object.reachability_distance and sqrt(object.reachability_distance)) or 9999
 	--// Precondition: neighborhoodRadius_alt <= generating dist neighborhoodRadius for Ordered Objects
 	if reachabilityDist > neighborhoodRadius_alt then --// UNDEFINED > neighborhoodRadius. ie: Not reachable from outside
-		local coreDistance = (object.core_distance and math.sqrt(object.core_distance)) or 9999
+		local coreDistance = (object.core_distance and sqrt(object.core_distance)) or 9999
 		if coreDistance <= neighborhoodRadius_alt then --//has neighbor
 			currentClusterID = currentClusterID + 1 --//create new cluster
 			cluster[currentClusterID] = cluster[currentClusterID] or {} --//initialize array
@@ -352,21 +363,21 @@ function WG.OPTICS_cluster (receivedUnitList, neighborhoodRadius, minimumNeighbo
 	local noiseIDList = {}
 	local currentClusterID = 0
 	local posListX= {}
-	local osClock1 = os.clock()
+	local osClock1 = clock()
 	--//SORTING unit list by X axis for easier searching, for getting unit in a box thru GetUnitInSquare()
-	neighborhoodRadius = math.max(neighborhoodRadius_alt,neighborhoodRadius)
+	neighborhoodRadius = max(neighborhoodRadius_alt,neighborhoodRadius)
 	for unitID,pos in pairs(receivedUnitList) do
 		posListX[#posListX+1] = {unitID,pos[1],pos[3]}
 		-- posListX = InsertAtOrder(posListX, {unitID,pos[1],pos[3]},function(a,b) return a[2]<b[2] end) --abit slow
 	end
-	table.sort(posListX, function(a,b) return a[2]<b[2] end) --//stack ascending
+	tsort(posListX, function(a,b) return a[2]<b[2] end) --//stack ascending
 	if echoOutCalculationTime then
 		distCount,shiftCount,insertCount = 0,0,0
 		setcoreCount,getunitCount,searchCount = 0,0,0
 		orderseedCount,intersectionCount = 0,0
-		Spring.Echo("SPEED")
-		Spring.Echo("Initial sorting: ".. os.clock() - osClock1)
-		osClock1 = os.clock()
+		spEcho("SPEED")
+		spEcho("Initial sorting: ".. clock() - osClock1)
+		osClock1 = clock()
 	end
 	--//SORTING unit list by connections, for extracting cluster information later using ExtractDBSCAN_Clustering()
 	for unitID,_ in pairs(receivedUnitList) do --//go thru the un-ordered list
@@ -376,16 +387,16 @@ function WG.OPTICS_cluster (receivedUnitList, neighborhoodRadius, minimumNeighbo
 		end
 	end
 	if echoOutCalculationTime then
-		Spring.Echo("OPTICs: ".. os.clock() - osClock1)
-		Spring.Echo("  Distance calculation: ".. distCount)
-		Spring.Echo("  OrderSeed calc: " .. orderseedCount)
-		Spring.Echo("    Insert calculation: " .. insertCount)
-		Spring.Echo("    Shift calculation: " .. shiftCount)
-		Spring.Echo("  SetCore sort calc: " .. setcoreCount)
-		Spring.Echo("  GetUnitBox calc: " .. getunitCount)
-		Spring.Echo("    BinarySearch: " .. searchCount)
-		Spring.Echo("    Intersection: " .. intersectionCount)
-		osClock1 = os.clock()
+		spEcho("OPTICs: ".. clock() - osClock1)
+		spEcho("  Distance calculation: ".. distCount)
+		spEcho("  OrderSeed calc: " .. orderseedCount)
+		spEcho("    Insert calculation: " .. insertCount)
+		spEcho("    Shift calculation: " .. shiftCount)
+		spEcho("  SetCore sort calc: " .. setcoreCount)
+		spEcho("  GetUnitBox calc: " .. getunitCount)
+		spEcho("    BinarySearch: " .. searchCount)
+		spEcho("    Intersection: " .. intersectionCount)
+		osClock1 = clock()
 	end
 	--//CREATE cluster based on desired density (density == neighborhoodRadius_alt). 
 	--//Note: changing cluster view to different density is really cheap when using this function as long as the initial neighborhoodRadius is greater than the new density.
@@ -395,7 +406,7 @@ function WG.OPTICS_cluster (receivedUnitList, neighborhoodRadius, minimumNeighbo
 		cluster, noiseIDList, currentClusterID = ExtractDBSCAN_Clustering (unitID, currentClusterID, cluster, noiseIDList, orderedObjects[i], neighborhoodRadius_alt)
 	end
 	if echoOutCalculationTime then	
-		Spring.Echo("Extract Cluster: ".. os.clock() - osClock1)
+		spEcho("Extract Cluster: ".. clock() - osClock1)
 	end
 	return cluster, noiseIDList
 end	
@@ -409,7 +420,7 @@ function WG.Run_OPTIC(receivedUnitList, neighborhoodRadius, minimumNeighbor) --/
 		posListX[#posListX+1] = {unitID,pos[1],pos[3]}
 		-- posListX = InsertAtOrder(posListX, {unitID,pos[1],pos[3]},function(a,b) return a[2]<b[2] end) --abit slow
 	end
-	table.sort(posListX, function(a,b) return a[2]<b[2] end) --//stack ascending
+	tsort(posListX, function(a,b) return a[2]<b[2] end) --//stack ascending
 	--//SORTING unit list by connections, for extracting cluster information later using ExtractDBSCAN_Clustering()
 	for unitID,_ in pairs(receivedUnitList) do --//go thru the un-ordered list
 		objects[unitID] = objects[unitID] or {unitID=unitID,}
@@ -495,7 +506,7 @@ function WG.DBSCAN_cluster(receivedUnitList,neighborhoodRadius,minimumNeighbor)
 		-- posListX = InsertAtOrder(posListX, {unitID,pos[1],pos[3]},function(a,b) return a[2]<b[2] end) --abit slow
 
 	end
-	table.sort(posListX, function(a,b) return a[2]<b[2] end) --//stack ascending
+	tsort(posListX, function(a,b) return a[2]<b[2] end) --//stack ascending
 	for unitID,_ in pairs(receivedUnitList) do --//go thru the un-ordered list
 	
 		if visitedUnitID[unitID] ~= true then --//skip if already visited
