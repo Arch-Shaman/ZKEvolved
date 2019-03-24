@@ -154,6 +154,11 @@
 						else
 							config[i]["clusternuke"] = true
 						end
+						if type(curRef.useheight) ~= "string" then
+							config[i]["useheight"] = 0
+						else
+							config[i]["useheight"] = tonumber(curRef.useheight)
+						end
 					else
 						spEcho("Error: " .. i .. "(" .. WeaponDefs[i].name .. "): spawndist is not present.")
 					end
@@ -262,13 +267,13 @@
 			end
 			if strfind(vectoring,"random") then
 				if strfind(vectoring,"x") then
-					projectileattributes["speed"][1] = vx+random(-r,r)
+					projectileattributes["speed"][1] = vx+random(-vr,vr)
 				end
 				if strfind(vectoring,"y") then
-					projectileattributes["speed"][2] = vy+random(-r,r)
+					projectileattributes["speed"][2] = vy+random(-vr,vr)
 				end
 				if strfind(vectoring,"z") then
-					projectileattributes["speed"][3] = vz+random(-r,r)
+					projectileattributes["speed"][3] = vz+random(-vr,vr)
 				end
 			elseif strfind(vectoring,"even") then
 				if strfind(vectoring,"x") then
@@ -313,7 +318,7 @@
 		local vx,vy,vz = spGetProjectileVelocity(id)
 		local targettype,targetID,targetPos = spGetProjectileTarget(id)
 		if debug then spEcho("Attack type: " .. targettype) ; spEcho("Target: " .. tostring(targetID)) end
-		if config[wd].clusternuke then -- this spawns at the selected height when vy < 0
+		if config[wd].useheight then -- this spawns at the selected height when vy < 0
 			if y2 - spGetGroundHeight(x2,z2) < config[wd].spawndist and vy < 0 then
 				SpawnSubProjectiles(id,wd)
 			else

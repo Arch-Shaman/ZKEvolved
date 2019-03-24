@@ -180,7 +180,7 @@ end
 function gadget:GameFrame(f)
 	if f%30 == 1 then
 		for id,target in pairs(interceptors) do
-			local _,p,_ = spGetProjectileTarget(id)
+			local p,_,_ = spGetProjectileTarget(id)
 			if select(1,spGetProjectilePosition(p)) == nil then
 				spDestroyProjectile(id)
 				interceptors[id] = nil
