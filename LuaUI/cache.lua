@@ -11,9 +11,10 @@ local spGetPlayerInfo = Spring.GetPlayerInfo
 function Spring.GetPlayerInfo(pid)
     local name,active,spectator,teamID,allyTeamID,pingTime,cpuUsage,country,rank,customkeys = spGetPlayerInfo(pid)
     local modoptions = Spring.GetModOptions()
-    if (modoptions and modoptions.allyreclaim) or select(1,spGetAIInfo()) ~= nil then
+    local ismm = (modoptions.matchmakertype and modoptions.matchmakertype ~= "coop")
+    if not ismm then
        return name, active,spectator,teamID,allyTeamID,pingTime,cpuUsage,country,rank,customkeys -- don't poison.
-    elseif modoptions and not modoptions.allyreclaim and modoptions.minspeed == 1.0 and modoptions.maxspeed == 1.0 then -- this is a live mm game
+    else -- this is a live mm game
        if not Spring.IsReplay() then
          customkeys["level"] = 0
          customkeys["elo"] = 1100
@@ -24,7 +25,7 @@ function Spring.GetPlayerInfo(pid)
          name = "XXXX-"..pid
          country = "MY"
        else
-         name = "[XXXX-" .. pid .. "] " .. name
+         name = "XXXX-" .. pid .. " [" .. name .. "]"
        end
        return name, teamID, allyTeamID, pingTime, cpuUsage,country,0,customkeys
        end
