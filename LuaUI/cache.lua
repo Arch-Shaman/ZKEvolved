@@ -27,7 +27,7 @@ function Spring.GetPlayerInfo(pid)
        else
          name = "XXXX-" .. pid .. " [" .. name .. "]"
        end
-       return name, teamID, allyTeamID, pingTime, cpuUsage,country,0,customkeys
+       return name, active, spectator, teamID, allyTeamID, pingTime, cpuUsage,country,0,customkeys
        end
 end
 
